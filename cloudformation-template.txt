@@ -53,7 +53,7 @@ Resources:
             
             # Download application files (you would replace with your actual source repository)
             wget https://github.com/aj392500/urlshortner/blob/main/url-shortener-app.py
-            wget https://your-source-repository.com/templates/index.html
+            wget https://github.com/aj392500/urlshortner/blob/main/url-shortener-templates.html
             
             # Set up and run application
             python3 url_shortener.py &
