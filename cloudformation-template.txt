@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'URL Shortener Infrastructure with EC2 and Security Group'
+Description: 'URL Shortener Infrastructure with Automatic Key Pair Generation, EC2, and Security Group'
 
 Parameters:
   InstanceType:
@@ -11,16 +11,21 @@ Parameters:
       - t2.small
       - t2.medium
 
-  KeyName:
-    Description: Name of an existing EC2 KeyPair
-    Type: AWS::EC2::KeyPair::DefaultKey
-    ConstraintDescription: Must be the name of an existing EC2 KeyPair
-
 Resources:
+  # Dynamically Generated Key Pair
+  URLShortenerKeyPair:
+    Type: 'AWS::EC2::KeyPair'
+    Properties:
+      KeyName: !Sub '${AWS::StackName}-key'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName} Key Pair'
+
+  # Security Group for URL Shortener
   URLShortenerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow HTTP and SSH access
+      GroupDescription: Allow HTTP and SSH access for URL Shortener
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -31,34 +36,47 @@ Resources:
           ToPort: 5000
           CidrIp: 0.0.0.0/0
 
+  # EC2 Instance for URL Shortener
   URLShortenerEC2Instance:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: !Ref InstanceType
       SecurityGroups: 
         - !Ref URLShortenerSecurityGroup
-      KeyName: !Ref DefaultKey
+      KeyName: !Ref URLShortenerKeyPair
       ImageId: ami-0c55b159cbfafe1f0  # Amazon Linux 2 AMI (adjust for your region)
       UserData:
         Fn::Base64: 
           !Sub |
             #!/bin/bash
             yum update -y
-            yum install -y python3 python3-pip
+            yum install -y python3 python3-pip git
             pip3 install flask
             
             # Create application directory
             mkdir -p /opt/url-shortener
             cd /opt/url-shortener
             
-            # Download application files (you would replace with your actual source repository)
-            wget https://github.com/aj392500/urlshortner/blob/main/url-shortener-app.py
-            wget https://github.com/aj392500/urlshortner/blob/main/url-shortener-templates.html
+            # Clone application from GitHub (replace with your repository)
+            git clone https://github.com/yourusername/url-shortener.git .
             
             # Set up and run application
             python3 url_shortener.py &
+
+  # SSM Parameter Store to Securely Store Private Key
+  PrivateKeyParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/${AWS::StackName}/ec2-private-key'
+      Type: SecureString
+      Value: !GetAtt URLShortenerKeyPair.PrivateMaterial
+      Description: Private key for the EC2 instance
 
 Outputs:
   InstancePublicDNS:
     Description: Public DNS of the newly created EC2 instance
     Value: !GetAtt URLShortenerEC2Instance.PublicDnsName
+  
+  PrivateKeyParameterName:
+    Description: SSM Parameter Store name for the private key
+    Value: !Ref PrivateKeyParameter
