@@ -52,7 +52,7 @@ Resources:
             cd /opt/url-shortener
             
             # Download application files (you would replace with your actual source repository)
-            wget https://your-source-repository.com/url_shortener.py
+            wget https://github.com/aj392500/urlshortner/blob/main/url-shortener-app.py
             wget https://your-source-repository.com/templates/index.html
             
             # Set up and run application
