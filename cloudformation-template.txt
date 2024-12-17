@@ -13,7 +13,7 @@ Parameters:
 
   KeyName:
     Description: Name of an existing EC2 KeyPair
-    Type: AWS::EC2::KeyPair::KeyName
+    Type: AWS::EC2::KeyPair::defaultkey
     ConstraintDescription: Must be the name of an existing EC2 KeyPair
 
 Resources:
@@ -37,7 +37,7 @@ Resources:
       InstanceType: !Ref InstanceType
       SecurityGroups: 
         - !Ref URLShortenerSecurityGroup
-      KeyName: !Ref KeyName
+      KeyName: !Ref defaultkey
       ImageId: ami-0c55b159cbfafe1f0  # Amazon Linux 2 AMI (adjust for your region)
       UserData:
         Fn::Base64: 
